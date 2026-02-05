@@ -2,10 +2,8 @@
 -- BASIC SELECT QUERIES
 -- =========================================
 
--- Show all roles
 SELECT * FROM role;
 
--- Show all users and their roles
 SELECT
     u.username,
     u.email,
@@ -13,14 +11,13 @@ SELECT
 FROM user_account u
 JOIN role r ON u.role_id = r.role_id;
 
--- Show all customers
 SELECT * FROM customer;
 
+
 -- =========================================
--- JOIN QUERIES (CORE BUSINESS QUERIES)
+-- JOIN QUERIES
 -- =========================================
 
--- Show customers and their bookings
 SELECT
     c.first_name,
     c.last_name,
@@ -30,7 +27,7 @@ SELECT
 FROM customer c
 JOIN booking b ON c.customer_id = b.customer_id;
 
--- Full booking summary (customer, flight, accommodation, payment)
+
 SELECT
     c.first_name,
     c.last_name,
@@ -47,11 +44,11 @@ JOIN flight f ON b.booking_id = f.booking_id
 JOIN accommodation a ON b.booking_id = a.booking_id
 JOIN payment p ON b.booking_id = p.booking_id;
 
+
 -- =========================================
--- OPTIONAL SERVICES (MANY-TO-MANY)
+-- OPTIONAL SERVICES
 -- =========================================
 
--- Show optional services per booking
 SELECT
     b.booking_id,
     s.service_name,
@@ -60,27 +57,20 @@ FROM booking b
 JOIN booking_service bs ON b.booking_id = bs.booking_id
 JOIN optional_service s ON bs.service_id = s.service_id;
 
--- =========================================
--- AGGREGATE FUNCTIONS (REPORTING)
--- =========================================
-
--- Total revenue generated
-SELECT SUM(amount) AS total_revenue
-FROM payment;
-
--- Average booking cost
-SELECT AVG(total_cost) AS average_booking_cost
-FROM booking;
-
--- Highest booking cost
-SELECT MAX(total_cost) AS highest_booking_cost
-FROM booking;
 
 -- =========================================
--- CASE STATEMENT (BUSINESS LOGIC)
+-- AGGREGATE FUNCTIONS
 -- =========================================
 
--- Categorise bookings by value
+SELECT SUM(amount) AS total_revenue FROM payment;
+SELECT AVG(total_cost) AS average_booking_cost FROM booking;
+SELECT MAX(total_cost) AS highest_booking_cost FROM booking;
+
+
+-- =========================================
+-- CASE STATEMENT
+-- =========================================
+
 SELECT
     booking_id,
     total_cost,
@@ -91,13 +81,43 @@ SELECT
     END AS booking_category
 FROM booking;
 
+
 -- =========================================
--- ROLE-BASED DATA VIEW (SECURITY CONTEXT)
+-- TCL + ACID DEMONSTRATION
 -- =========================================
 
--- View customer-accessible booking details
-SELECT
-    b.booking_id,
-    b.booking_status,
-    b.total_cost
-FROM booking b;
+BEGIN;
+
+UPDATE booking
+SET booking_status = 'Cancelled'
+WHERE booking_id = 1;
+
+ROLLBACK;
+
+
+BEGIN;
+
+UPDATE booking
+SET booking_status = 'Confirmed'
+WHERE booking_id = 1;
+
+COMMIT;
+
+
+-- =========================================
+-- ACCESS LEVEL DEMONSTRATION
+-- =========================================
+
+-- Admin view
+SET ROLE admin_role;
+SELECT * FROM booking;
+
+-- Travel Agent view
+SET ROLE travel_agent_role;
+SELECT booking_id, booking_status FROM booking;
+
+-- Customer view
+SET ROLE customer_role;
+SELECT booking_id, total_cost FROM booking;
+
+RESET ROLE;
