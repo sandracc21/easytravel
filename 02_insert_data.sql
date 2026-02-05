@@ -116,4 +116,24 @@ SELECT
     s.service_id
 FROM booking b
 CROSS JOIN optional_service s;
-SELECT * FROM customer;
+
+
+
+-- =========================================
+-- ACCESS CONTROL IMPLEMENTATION (DCL)
+-- =========================================
+
+CREATE ROLE admin_role;
+CREATE ROLE travel_agent_role;
+CREATE ROLE customer_role;
+
+-- Admin full access
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO admin_role;
+
+-- Travel agent limited access
+GRANT SELECT, INSERT, UPDATE ON booking TO travel_agent_role;
+GRANT SELECT ON customer TO travel_agent_role;
+
+-- Customer limited access
+GRANT SELECT, UPDATE ON booking TO customer_role;
+GRANT SELECT ON customer TO customer_role;
